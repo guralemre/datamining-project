@@ -5,7 +5,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
-from yellowbrick.cluster import KElbowVisualizer
+from sklearn.metrics import silhouette_score
 
 # Sayfa Ayarları
 st.set_page_config(page_title="Global AI Salary Predictor", page_icon="🤖", layout="wide")
@@ -41,10 +41,17 @@ def load_and_train_pipeline():
     X_scaled = scaler.fit_transform(X_encoded)
     X_scaled_df = pd.DataFrame(X_scaled, columns=X_encoded.columns)
 
-    kmeans = KMeans(random_state=17)
-    elbow = KElbowVisualizer(kmeans, k=(2, 15), timings=False)
-    elbow.fit(X_scaled_df)
-    optimal_k = elbow.elbow_value_ if elbow.elbow_value_ is not None else 4
+    # Elbow yöntemi yerine Silhouette Score ile optimal k bulma
+    best_k = 4
+    best_score = -1
+    for k in range(2, 15):
+        km = KMeans(n_clusters=k, random_state=17, n_init=10)
+        labels = km.fit_predict(X_scaled_df)
+        score = silhouette_score(X_scaled_df, labels)
+        if score > best_score:
+            best_score = score
+            best_k = k
+    optimal_k = best_k
 
     final_kmeans = KMeans(n_clusters=optimal_k, random_state=17).fit(X_scaled_df)
     df_cleaned['cluster'] = final_kmeans.labels_ + 1
