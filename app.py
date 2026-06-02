@@ -57,12 +57,12 @@ def load_and_train_pipeline():
     xgb_model = XGBRegressor(learning_rate=0.1, max_depth=6, n_estimators=150, random_state=42)
     xgb_model.fit(X_train, y_train)
 
-    return scaler, final_kmeans, xgb_model, X_train.columns, categorical_options, hidden_defaults
+    return scaler, final_kmeans, xgb_model, X_train.columns, categorical_options, hidden_defaults, X_encoded.columns
 
 
 # Arka plan yükleme hazırlığı
 with st.spinner("Veri modeli arka planda hazırlanıyor..."):
-    scaler, final_kmeans, xgb_model, train_columns, categorical_options, hidden_defaults = load_and_train_pipeline()
+    scaler, final_kmeans, xgb_model, train_columns, categorical_options, hidden_defaults, scaler_columns = load_and_train_pipeline()
 
 # =====================================================================
 # ARAYÜZ TASARIMI (Sadece Maaş Tahmini)
@@ -80,7 +80,6 @@ with col1:
 
     # Sayısal Girdiler
     experience_years = st.slider("Deneyim Yılı (Experience Years)", min_value=0, max_value=30, value=2)
-    weekly_hours = st.slider("Haftalık Çalışma Saati (Weekly Hours)", min_value=10, max_value=80, value=40, step=5)
 
     # Kategorik Girdiler
     user_selections = {}
@@ -96,7 +95,6 @@ with col2:
 
     # 2. UI sayısal değerlerini yazma
     new_candidate_template['experience_years'] = experience_years
-    new_candidate_template['weekly_hours'] = weekly_hours
 
     # 3. UI kategorik seçimlerini aktarma
     for col_name, selected_val in user_selections.items():
@@ -112,6 +110,8 @@ with col2:
 
     # 5. K-Means Küme Tespiti (Gizli hesaplama)
     candidate_for_cluster = new_candidate_template.drop(columns=['k_means_cluster'], errors='ignore')
+    # Scaler ile aynı sütun sırasını kullan
+    candidate_for_cluster = candidate_for_cluster[scaler_columns]
     candidate_scaled = scaler.transform(candidate_for_cluster)
     assigned_cluster = final_kmeans.predict(candidate_scaled)[0] + 1
     new_candidate_template['k_means_cluster'] = assigned_cluster
@@ -127,6 +127,6 @@ with col2:
     st.write("##")
     st.info(
         f"**Profil Özeti:** {user_selections.get('country', 'Seçili ülkede')} lokasyonunda, "
-        f"{experience_years} yıl deneyim ile haftalık {weekly_hours} saat çalışan bir "
+        f"{experience_years} yıl deneyim ile "
         f"**{user_selections.get('job_role', 'Yapay Zeka Çalışanı')}** profili simüle edilmiştir."
     )
