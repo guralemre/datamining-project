@@ -235,7 +235,6 @@ candidate_scaled = scaler.transform(candidate_for_cluster)
 assigned_cluster = final_kmeans.predict(candidate_scaled)[0] + 1
 new_candidate_template['k_means_cluster'] = assigned_cluster
 
-print(f"Assigned Cluster: {assigned_cluster}")
 
 live_prediction = best_model.predict(new_candidate_template)[0]
 
