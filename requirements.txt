@@ -3,4 +3,7 @@ pandas
 numpy
 scikit-learn
 xgboost
-yellowbrick
+yellowbrick==1.5
+scipy>=1.7
+matplotlib>=3.5
+cycler>=0.10
